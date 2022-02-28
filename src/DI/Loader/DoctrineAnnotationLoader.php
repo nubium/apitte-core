@@ -22,6 +22,8 @@ use Apitte\Core\Schema\EndpointRequestBody;
 use Apitte\Core\Schema\SchemaBuilder;
 use Apitte\Core\UI\Controller\IController;
 use Doctrine\Common\Annotations\Reader;
+use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\AnnotationRegistry;
 use Nette\Neon\Neon;
 use ReflectionClass;
 use ReflectionMethod;
@@ -291,8 +293,14 @@ final class DoctrineAnnotationLoader extends AbstractContainerLoader
 	private function getReader(): Reader
 	{
 		if (!$this->reader) {
-			$dualReaderFactory = new DualReaderFactory();
-			$this->reader = $dualReaderFactory->create();
+			// DualReader selze pri array_unique anotaci a atributu (kvuli OpenApi anotacim, ktere jsou rekurzivni), see DualReader::getMethodAnnotations()
+			// atributy z php8 zatim nepouzivame, takze nahrazujeme obyc annotation readerem
+			$annotationReader = new AnnotationReader();
+			AnnotationRegistry::registerUniqueLoader('class_exists');
+			$this->reader = $annotationReader;
+
+//			$dualReaderFactory = new DualReaderFactory();
+//			$this->reader = $dualReaderFactory->create();
 		}
 
 		return $this->reader;
